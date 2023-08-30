@@ -1,55 +1,65 @@
 <!DOCTYPE html>
-<html lang="en" style="font-family: Montserrat, sans-serif;background: #141414;">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>therealcatto</title>
-    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-    <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css">
-    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
-    <link rel="stylesheet" href="assets/fonts/fontawesome5-overrides.min.css">
-    <link rel="stylesheet" href="assets/css/Copyright.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
-    <link rel="stylesheet" href="assets/css/Projects-Horizontal.css">
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>shyy.xyz</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="files/cat.gif">
+
 </head>
 
-<body style="height: 1080px;background: rgb(20,20,20);">
-    <audio autoplay source="/assets/creed.mp3"></audio>
-    <nav class="navbar navbar-light navbar-expand-lg fixed-top" id="mainNav" style="background: #141414;color: rgb(255,255,255);">
-        <div class="container"><a class="navbar-brand js-scroll-trigger" href="index.html" style="font-family: Montserrat, sans-serif;color: rgba(255,255,255,0.9);padding-left: 20px;padding-top: 20px;"><strong>shyy</strong></a></div>
-    </nav>
-    <section id="main" style="width: 1920hv;height: 1080hv;">
-        <header class="text-center text-white d-flex masthead" style="background: #141414;font-family: Montserrat, sans-serif;height: 100vh;">
-            <div class="container my-auto">
-                <div class="row">
-                    <div class="col-lg-10 mx-auto">
-                        <h1 style="font-size: 35px;"><span style="font-family: Montserrat, sans-serif;"><strong>This website is under Construction &nbsp;</strong></span></h1>
-                        <hr>
-                    </div>
-                </div>
-                <div class="col-lg-8 mx-auto" style="margin-bottom: -105px;">
-                </div>
-            </div>
-        </header>
-    </section>
-    
-        </header>
-    <footer class="copyright">
-				<div class="content"> shyy © 2023
-	</div>
-	</footer>
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/js/bs-init.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="assets/js/smoothscroll.js"></script>
+<body>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <div class="parallax">
+        <span value="5" id="particles-js"></span>
+    </div>
+    <audio loop="" src="files/1.mp3" id="audio" __idm_id__="3555329" rythm-connected="0"></audio>
+
+    <script src="js/title.js"></script>
+    <script src="js/textch.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/app.js"></script>
+    <!-- <script src="js/rythm.js"></script> -->
+    <script src="js/audio.js"></script>
+
+    <div class="container_main" name="container_main" style="visibility: visible; width: 50%;">
+        <ul>
+            <img class="img" src="files/cat2.gif" style="filter: drop-shadow(rgb(2, 213, 255) 0px 0px 0px);">
+        </ul>
+
+        <ul class="title">shyy.xyz</ul>
+        <ul class="sub_title">
+            <a class="index_message" id="index_message"></a>
+        </ul>
+
+        <ul>
+            <a class="text" href="https://discordapp.com/users/735508452482351176" target="_blank" rel="noopener noreferrer">discord</a>
+            |
+            <a class="text" href="https://steamcommunity.com/id/thekatto/" target="_blank" rel="noopener noreferrer">steam</a>
+            |
+            <a class="text" href="" target="_blank" rel="noopener noreferrer">alt web</a>
+            |
+            <a class="text" href="https://open.spotify.com/playlist/2VpiQsUUU1r9FsunU1icUX?si=533f68e5cb414f4f" target="_blank" rel="noopener noreferrer">Spotify Playlist</a>
+            |
+            <a class="text" href="" target="_blank" rel="noopener noreferrer">login</a>
+        </ul>
+    </div>
+
     <script>
+        document.addEventListener("mousemove", parallax);
+        function parallax(event) {
+            this.querySelectorAll(".parallax span").forEach((shift) => {
+                const position = shift.getAttribute("value");
+                const x = (window.innerWidth - event.pageX * position) / 90;
+                const y = (window.innerHeight - event.pageY * position) / 90;
+                shift.style.transform = `translateX(${x}px) translateY(${y}px)`;
+            });
+        }
     </script>
+
 </body>
 
 </html>
