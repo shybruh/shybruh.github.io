@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shyy.rip</title>
+  <link rel="icon" href="assets/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      overflow: hidden;
+    }
+
+    .grid-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+      transform: translate(0px, 0px);
+      transition: transform 0.1s ease-out;
+    }
+
+    .grid {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background-image: linear-gradient(#191919 1px, transparent 1px),
+                        linear-gradient(90deg, #191919 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: moveGrid 10s linear infinite;
+    }
+
+    /* Music-reactive grid cells */
+    .grid-cell {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 1px solid transparent;
+      transition: all 0.1s ease-out;
+      pointer-events: none;
+    }
+
+    .grid-cell.reactive {
+      border-color: #ff66cc;
+      box-shadow: 
+        0 0 10px rgba(255, 102, 204, 0.6),
+        0 0 20px rgba(255, 102, 204, 0.4),
+        inset 0 0 10px rgba(255, 102, 204, 0.2);
+      background: rgba(255, 102, 204, 0.1);
+    }
+
+    .grid-cell.reactive.intense {
+      border-color: #ff33aa;
+      box-shadow: 
+        0 0 20px rgba(255, 51, 170, 0.8),
+        0 0 40px rgba(255, 51, 170, 0.6),
+        inset 0 0 20px rgba(255, 51, 170, 0.3);
+      background: rgba(255, 51, 170, 0.2);
+    }
+
+    @keyframes moveGrid {
+      from {
+        transform: translate(0, 0);
+      }
+      to {
+        transform: translate(-80px, -80px);
+      }
+    }
+
+    .main {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -70%);
+      text-align: center;
+      z-index: 2;
+      font-size: 1em;
+      letter-spacing: 2px;
+      color: #c0c0ff;
+      text-shadow: 0 0 4px #e1e1f4, 0 0 8px #babad6;
+      opacity: 0.85;
+      animation: glowFade 10s ease-in-out infinite alternate;
+    }
+
+    .main img {
+      filter: drop-shadow(0 0 8px #ff66cc) 
+              drop-shadow(0 0 16px #ff33aa) 
+              drop-shadow(0 0 24px #cc0099);
+      animation: svgGlow 4s ease-in-out infinite alternate;
+      width: 400px;
+      height: auto;
+    }
+
+    @keyframes svgGlow {
+      0% {
+        filter: drop-shadow(0 0 8px #ff66cc) 
+                drop-shadow(0 0 16px #ff33aa) 
+                drop-shadow(0 0 24px #cc0099);
+      }
+      100% {
+        filter: drop-shadow(0 0 12px #ff66cc) 
+                drop-shadow(0 0 24px #ff33aa) 
+                drop-shadow(0 0 36px #cc0099);
+      }
+    }
+
+    .main h1  {
+      color: #ff66cc;
+      text-shadow:
+        0 0 6px #ff66cc,
+        0 0 12px #ff33aa,
+        0 0 18px #cc0099;
+      animation: headingGlow 4s ease-in-out infinite alternate;
+      font-size: 3em;
+    }
+
+    @keyframes headingGlow {
+      0% {
+        text-shadow: 0 0 6px #ff66cc, 0 0 12px #ff33aa, 0 0 18px #cc0099;
+      }
+      100% {
+        text-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa, 0 0 30px #cc0099;
+      }
+    }
+
+    .main p {
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
+
+    .main ul {
+      margin-top: 2em;
+    }
+
+    @keyframes glowFade {
+      from {
+        text-shadow: 0 0 4px #8888ff, 0 0 8px #5555ff;
+        opacity: 0.85;
+      }
+      to {
+        text-shadow: 0 0 6px #aaaaff, 0 0 12px #7777ff;
+        opacity: 1;
+      }
+    }
+
+    a.text {
+      color: #aaaaff;
+      text-decoration: none;
+      margin: 0 0.5em;
+      transition: color 0.3s;
+    }
+
+    a.text:hover {
+      color: #ffffff;
+    }
+
+    /* Song Display */
+    .song-display {
+      position: absolute;
+      top: 58%;
+      left: 50%;
+      transform: translate(-50%, 120%);
+      z-index: 3;
+      text-align: center;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .song-display.visible {
+      opacity: 1;
+      transform: translate(-50%, 100%);
+    }
+
+    .song-info {
+      font-size: 1.1em;
+      color: #ff66cc;
+      text-shadow: 0 0 8px rgba(255, 102, 204, 0.6);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .song-artist-inline {
+      color: #aaaaff;
+      opacity: 0.8;
+      font-weight: 400;
+    }
+
+    /* Modern Audio Player Styles */
+    .audio-player {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 150%);
+      z-index: 3;
+      margin-top: 40px;
+    }
+
+    .player-collapsed {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 50%;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      width: 70px;
+      height: 70px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+    }
+
+    .player-collapsed.hidden {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.8);
+      pointer-events: none;
+    }
+
+    .player-expanded {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-width: 700px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+    }
+
+    .player-expanded.visible {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: all;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
+    }
+
+    .control-btn img {
+      width: 16px;
+      height: 16px;
+      filter: brightness(0) invert(1);
+    }
+
+    .play-btn img {
+      margin-left: 2px;
+    }
+
+    .loop-btn.active {
+      background: rgba(255, 102, 204, 0.2);
+      box-shadow: 0 0 8px rgba(255, 102, 204, 0.3);
+    }
+
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .time-display {
+      font-size: 12px;
+      color: #aaa;
+      font-family: 'Orbitron', sans-serif;
+      min-width: 35px;
+    }
+
+    .progress-bar, .volume-bar {
+      position: relative;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      transition: height 0.2s ease;
+    }
+
+    .progress-bar {
+      flex: 1;
+    }
+
+    .volume-bar {
+      width: 60px;
+    }
+
+    .progress-bar:hover, .volume-bar:hover {
+      height: 6px;
+    }
+
+    .progress-fill, .volume-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff66cc, #ff33aa);
+      border-radius: 2px;
+      transition: width 0.1s ease;
+      position: relative;
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .volume-icon {
+      width: 16px;
+      height: 16px;
+      filter: brightness(0) invert(1);
+      opacity: 0.7;
+    }
+
+    .close-btn {
+      opacity: 0.7;
+    }
+
+    .close-btn:hover {
+      opacity: 1;
+    }
+
+    /* Glow animation for active player */
+    .player-expanded.visible {
+      box-shadow: 0 0 20px rgba(255, 102, 204, 0.3);
+      animation: playerGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes playerGlow {
+      0% {
+        box-shadow: 0 0 20px rgba(255, 102, 204, 0.3);
+      }
+      100% {
+        box-shadow: 0 0 30px rgba(255, 102, 204, 0.5);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Audio Element -->
+  <audio id="audio" loop></audio>
+
+  <!-- Background Grid -->
+  <div class="grid-wrapper">
+    <div class="grid" id="dynamic-grid"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <img src="assets/logo.svg">
+    <ul>
+      <a class="text" href="https://discordapp.com/users/735508452482351176" target="_blank">discord</a> |
+      <a class="text" href="https://steamcommunity.com/id/etherealshyy/" target="_blank">steam</a> |
+      <a class="text" href="https://open.spotify.com/playlist/2VpiQsUUU1r9FsunU1icUX?si=533f68e5cb414f4f" target="_blank">playlist</a>
+    </ul>
+  </div>
+
+  <!-- Song Display -->
+  <div class="song-display" id="song-display">
+    <div class="song-info" id="song-info">Select a song</div>
+  </div>
+
+  <!-- Modern Audio Player -->
+  <div class="audio-player" id="audio-player">
+    <div class="player-collapsed" id="player-collapsed">
+      <button class="control-btn play-btn" id="audio-toggle">
+        <img src="assets/icons/play.svg" alt="Play" id="play-icon">
+      </button>
+    </div>
+    
+    <div class="player-expanded" id="player-expanded">
+      <button class="control-btn" id="prev-btn">
+        <img src="assets/icons/prev.svg" alt="Previous">
+      </button>
+      
+      <button class="control-btn play-btn" id="audio-toggle-expanded">
+        <img src="assets/icons/pause.svg" alt="Pause" id="play-icon-expanded">
+      </button>
+      
+      <button class="control-btn" id="next-btn">
+        <img src="assets/icons/next.svg" alt="Next">
+      </button>
+      
+      <div class="progress-container">
+        <div class="time-display" id="current-time">0:00</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="time-display" id="total-time">0:00</div>
+      </div>
+      
+      <div class="volume-container">
+        <img src="assets/icons/volume.svg" alt="Volume" class="volume-icon">
+        <div class="volume-bar">
+          <div class="volume-fill" id="volume-fill"></div>
+        </div>
+      </div>
+      
+      <button class="control-btn loop-btn" id="loop-btn">
+        <img src="assets/icons/repeat.svg" alt="Loop">
+      </button>
+      
+      <button class="control-btn close-btn" id="close-player">
+        <img src="assets/icons/close.svg" alt="Close">
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/title.js"></script>
+  <script src="scripts/audio.js"></script>
+  <script src="scripts/music-grid.js"></script>
+  
+  <!-- Parallax Script -->
+  <script>
+    const wrapper = document.querySelector('.grid-wrapper');
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      const moveX = x * 30;
+      const moveY = y * 30;
+      wrapper.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+  </script>
+</body>
+</html>
