@@ -12,6 +12,10 @@ body {
   overflow: hidden;
   opacity: 0;
   animation: fadeInBody 1.5s ease-out forwards;
+  /* Prevent scrolling on mobile */
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes fadeInBody {
@@ -32,32 +36,35 @@ body {
   transition: transform 0.1s ease-out;
   opacity: 0;
   animation: fadeInGrid 4s ease-out 3s forwards;
+  /* Reduce on mobile */
+  will-change: transform;
 }
 
 @keyframes fadeInGrid {
   to {
-    opacity: 1;
+    opacity: 0.7; /* Reduced opacity on mobile for performance */
   }
 }
 
 .grid {
   position: absolute;
-  width: 200%;
-  height: 200%;
+  width: 150%; /* Reduced size for mobile */
+  height: 150%;
   left: -25%;
   top: -25%;
   background-image: linear-gradient(#191919 1px, transparent 1px),
                     linear-gradient(90deg, #191919 1px, transparent 1px);
   background-size: 40px 40px;
-  animation: moveGrid 20s linear infinite;
+  animation: moveGrid 30s linear infinite; /* Slower animation */
 }
-/* Grid cells */
+
+/* Grid cells - simplified for mobile */
 .grid-cell {
   position: absolute;
   width: 40px;
   height: 40px;
   border: 1px solid transparent;
-  transition: all 0.1s ease-out;
+  transition: all 0.2s ease-out;
   pointer-events: none;
   opacity: 0;
   animation: fadeInCell 1s ease-out forwards;
@@ -65,39 +72,24 @@ body {
 
 @keyframes fadeInCell {
   to {
-    opacity: 1;
+    opacity: 0.8; /* Reduced opacity */
   }
-}
-
-/* Stagger the grid cell animations - much slower */
-.grid-cell:nth-child(even) {
-  animation-delay: 4s;
-}
-
-.grid-cell:nth-child(3n) {
-  animation-delay: 4.5s;
-}
-
-.grid-cell:nth-child(5n) {
-  animation-delay: 5s;
 }
 
 .grid-cell.reactive {
   border-color: #ff66cc;
   box-shadow: 
-    0 0 10px rgba(255, 102, 204, 0.6),
-    0 0 20px rgba(255, 102, 204, 0.4),
-    inset 0 0 10px rgba(255, 102, 204, 0.2);
-  background: rgba(255, 102, 204, 0.1);
+    0 0 8px rgba(255, 102, 204, 0.4),
+    0 0 16px rgba(255, 102, 204, 0.2);
+  background: rgba(255, 102, 204, 0.05);
 }
 
 .grid-cell.reactive.intense {
   border-color: #ff33aa;
   box-shadow: 
-    0 0 20px rgba(255, 51, 170, 0.8),
-    0 0 40px rgba(255, 51, 170, 0.6),
-    inset 0 0 20px rgba(255, 51, 170, 0.3);
-  background: rgba(255, 51, 170, 0.2);
+    0 0 12px rgba(255, 51, 170, 0.6),
+    0 0 24px rgba(255, 51, 170, 0.3);
+  background: rgba(255, 51, 170, 0.1);
 }
 
 @keyframes moveGrid {
@@ -123,6 +115,7 @@ body {
   opacity: 0;
   animation: glowFade 10s ease-in-out infinite alternate,
              floatInMain 2s ease-out 0.5s forwards;
+  padding: 20px; /* Add padding for mobile */
 }
 
 @keyframes floatInMain {
@@ -142,13 +135,12 @@ body {
           drop-shadow(0 0 24px #cc0099);
   animation: svgGlow 4s ease-in-out infinite alternate,
              floatInLogo 2s ease-out 0.2s forwards;
-  width: 400px;
+  width: min(400px, 80vw); /* Responsive width */
   height: auto;
   transform-style: preserve-3d;
   opacity: 0;
+  max-width: 100%;
 }
-
-
 
 @keyframes floatInLogo {
   from {
@@ -166,7 +158,7 @@ body {
   transform: translateY(30px);
   animation: floatInLinks 2s ease-out 1.5s forwards;
   margin-top: 2em;
-  /* Remove the parallax transition */
+  font-size: clamp(0.8rem, 2vw, 1rem); /* Responsive font size */
 }
 
 @keyframes floatInLinks {
@@ -177,7 +169,6 @@ body {
 }
 
 .main img:hover {
-  /* Remove the transform from hover - it conflicts with animations */
   filter: drop-shadow(0 0 15px #ff66cc) 
           drop-shadow(0 0 30px #ff33aa) 
           drop-shadow(0 0 45px #cc0099);
@@ -196,39 +187,6 @@ body {
   }
 }
 
-@keyframes svgPulse {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(1.02);
-  }
-}
-
-.main h1 {
-  color: #ff66cc;
-  text-shadow:
-    0 0 6px #ff66cc,
-    0 0 12px #ff33aa,
-    0 0 18px #cc0099;
-  animation: headingGlow 4s ease-in-out infinite alternate;
-  font-size: 3em;
-}
-
-@keyframes headingGlow {
-  0% {
-    text-shadow: 0 0 6px #ff66cc, 0 0 12px #ff33aa, 0 0 18px #cc0099;
-  }
-  100% {
-    text-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa, 0 0 30px #cc0099;
-  }
-}
-
-.main p {
-  margin-top: 1em;
-  font-size: 1.2em;
-}
-
 @keyframes glowFade {
   from {
     text-shadow: 0 0 4px #8888ff, 0 0 8px #5555ff;
@@ -240,7 +198,6 @@ body {
   }
 }
 
-/* Individual link animations */
 a.text {
   color: #aaaaff;
   text-decoration: none;
@@ -250,13 +207,16 @@ a.text {
   opacity: 0;
   transform: translateY(20px);
   animation: floatInLink 1s ease-out forwards;
+  /* Better touch targets for mobile */
+  padding: 8px 4px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 a.text:nth-child(1) { animation-delay: 2s; }
 a.text:nth-child(3) { animation-delay: 2.3s; }
 a.text:nth-child(5) { animation-delay: 2.6s; }
-a.text:nth-child(7) { animation-delay: 2.9s; }
-a.text:nth-child(9) { animation-delay: 3.2s; }
 
 @keyframes floatInLink {
   to {
@@ -265,6 +225,61 @@ a.text:nth-child(9) { animation-delay: 3.2s; }
   }
 }
 
-a.text:hover {
+a.text:hover,
+a.text:active {
   color: #ffffff;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .grid {
+    width: 120%;
+    height: 120%;
+    background-size: 60px 60px; /* Larger grid on mobile */
+  }
+  
+  .grid-cell {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .main {
+    font-size: 0.9em;
+    letter-spacing: 1px;
+    padding: 15px;
+  }
+  
+  .main ul {
+    margin-top: 1.5em;
+  }
+  
+  a.text {
+    margin: 0 0.3em;
+    font-size: 0.9em;
+  }
+  
+  /* Reduce animations on mobile */
+  .grid-wrapper {
+    animation: none;
+  }
+  
+  .grid {
+    animation: moveGrid 60s linear infinite;
+  }
+}
+
+@media (max-width: 480px) {
+  .main img {
+    width: min(300px, 90vw);
+  }
+  
+  .main {
+    font-size: 0.8em;
+  }
+  
+  a.text {
+    display: block;
+    margin: 8px 0;
+    padding: 12px;
+  }
 }
