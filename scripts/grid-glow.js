@@ -1,19 +1,46 @@
-// Optimized grid glow system
+// Memory-optimized grid glow system
 class RandomGridGlow {
   constructor() {
     this.gridContainer = document.getElementById("dynamic-grid");
     this.cells = [];
     this.animationId = null;
     this.lastGlowTime = 0;
-    this.glowInterval = 500;
+    this.glowInterval = 800;
+    this.isDestroyed = false;
+    this.activeTimeouts = new Set(); // Track timeouts for cleanup
 
-    this.gridSize = 40;
-    // Drastically reduce grid coverage for performance
-    this.cols = Math.ceil((window.innerWidth * 1.5) / this.gridSize);
-    this.rows = Math.ceil((window.innerHeight * 1.5) / this.gridSize);
+    // Detect mobile and reduce complexity
+    this.isMobile = window.innerWidth <= 768 || 
+                   /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    this.gridSize = this.isMobile ? 60 : 40;
+    // Significantly reduce grid size for performance
+    const multiplier = this.isMobile ? 0.8 : 1.2;
+    this.cols = Math.ceil((window.innerWidth * multiplier) / this.gridSize);
+    this.rows = Math.ceil((window.innerHeight * multiplier) / this.gridSize);
+    
+    // Limit maximum cells for performance
+    const maxCells = this.isMobile ? 200 : 500;
+    const totalCells = this.cols * this.rows;
+    if (totalCells > maxCells) {
+      const ratio = Math.sqrt(maxCells / totalCells);
+      this.cols = Math.floor(this.cols * ratio);
+      this.rows = Math.floor(this.rows * ratio);
+    }
 
-    // Define shape patterns (keep existing shapes)
-    this.shapes = {
+    // Simplified shapes for mobile
+    this.shapes = this.isMobile ? {
+      circle: [
+        [-1, -1], [0, -1], [1, -1],
+        [-1, 0], [0, 0], [1, 0],
+        [-1, 1], [0, 1], [1, 1]
+      ],
+      cross: [
+        [0, -1],
+        [-1, 0], [0, 0], [1, 0],
+        [0, 1]
+      ]
+    } : {
       heart: [
         [-2, -1], [-1, -2], [0, -2], [1, -2], [2, -1],
         [-2, 0], [-1, -1], [0, -1], [1, -1], [2, 0],
@@ -34,32 +61,28 @@ class RandomGridGlow {
         [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0],
         [-1, 1], [0, 1], [1, 1],
         [0, 2]
-      ],
-      cross: [
-        [0, -2], [0, -1],
-        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0],
-        [0, 1], [0, 2]
-      ],
-      circle: [
-        [-1, -2], [0, -2], [1, -2],
-        [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1],
-        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0],
-        [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1],
-        [-1, 2], [0, 2], [1, 2]
       ]
     };
 
     this.createGrid();
     this.startVisualization();
+    
+    // Add cleanup on page unload
+    window.addEventListener('beforeunload', () => this.destroy());
+    window.addEventListener('pagehide', () => this.destroy());
   }
 
   createGrid() {
-    // Use DocumentFragment for better performance
+    if (this.isDestroyed) return;
+    
+    // Clear existing timeouts
+    this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.activeTimeouts.clear();
+    
     const fragment = document.createDocumentFragment();
     this.gridContainer.innerHTML = "";
     this.cells = [];
 
-    // Create fewer cells
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
         const cell = document.createElement("div");
@@ -79,25 +102,18 @@ class RandomGridGlow {
     }
 
     this.gridContainer.appendChild(fragment);
-
-    // Reduce container size
-    this.gridContainer.style.width = "200%";
-    this.gridContainer.style.height = "200%";
-    this.gridContainer.style.left = "-25%";
-    this.gridContainer.style.top = "-25%";
-
-    this.gridContainer.style.backgroundImage =
-      "linear-gradient(#191919 1px, transparent 1px), linear-gradient(90deg, #191919 1px, transparent 1px)";
-    this.gridContainer.style.backgroundSize = "40px 40px";
-    this.gridContainer.style.animation = "moveGrid 20s linear infinite";
   }
 
   startVisualization() {
+    if (this.isDestroyed) return;
+    
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
 
     const animate = () => {
+      if (this.isDestroyed) return;
+      
       this.updateVisualization();
       this.animationId = requestAnimationFrame(animate);
     };
@@ -106,30 +122,37 @@ class RandomGridGlow {
   }
 
   updateVisualization() {
+    if (this.isDestroyed) return;
+    
     const currentTime = Date.now();
     
     if (currentTime - this.lastGlowTime > this.glowInterval) {
       this.createRandomGlowingAreas();
       this.lastGlowTime = currentTime;
-      this.glowInterval = 400 + Math.random() * 300; // Slightly faster interval
+      this.glowInterval = this.isMobile ? 1000 + Math.random() * 500 : 600 + Math.random() * 400;
     }
 
-    // Batch DOM updates
-    this.cells.forEach((cell) => {
-      if (currentTime - cell.lastUpdate > 200) {
-        cell.element.classList.remove("reactive", "intense");
-        cell.intensity = 0;
-      }
-    });
+    // Batch DOM updates and limit frequency
+    if (currentTime % 300 < 50) { // Only update every ~300ms
+      this.cells.forEach((cell) => {
+        if (currentTime - cell.lastUpdate > 500) {
+          cell.element.classList.remove("reactive", "intense");
+          cell.intensity = 0;
+        }
+      });
+    }
   }
 
   createRandomGlowingAreas() {
+    if (this.isDestroyed) return;
+    
     const currentTime = Date.now();
-    // Reduce number of glowing areas
-    const numGlowingAreas = Math.floor(Math.random() * 4) + 2; // 2-5 areas
+    const numGlowingAreas = this.isMobile ? 
+      Math.floor(Math.random() * 2) + 1 : // 1-2 areas on mobile
+      Math.floor(Math.random() * 3) + 2;  // 2-4 areas on desktop
 
     for (let i = 0; i < numGlowingAreas; i++) {
-      const useShape = Math.random() < 0.3;
+      const useShape = Math.random() < 0.4;
       
       if (useShape) {
         this.createShapeGlow(currentTime);
@@ -140,6 +163,8 @@ class RandomGridGlow {
   }
 
   createShapeGlow(currentTime) {
+    if (this.isDestroyed) return;
+    
     const shapeNames = Object.keys(this.shapes);
     const shapeName = shapeNames[Math.floor(Math.random() * shapeNames.length)];
     const shapePattern = this.shapes[shapeName];
@@ -156,7 +181,7 @@ class RandomGridGlow {
         const cellIndex = row * this.cols + col;
         const cell = this.cells[cellIndex];
 
-        if (cell) {
+        if (cell && !this.isDestroyed) {
           const distance = Math.sqrt(dr * dr + dc * dc);
           const cellIntensity = Math.max(0.3, baseIntensity - distance * 0.1);
 
@@ -166,8 +191,6 @@ class RandomGridGlow {
 
           if (distance < 1.5 || Math.random() > 0.6) {
             cell.element.classList.add("intense");
-          } else {
-            cell.element.classList.remove("intense");
           }
         }
       }
@@ -175,10 +198,14 @@ class RandomGridGlow {
   }
 
   createCircularGlow(currentTime) {
+    if (this.isDestroyed) return;
+    
     const centerRow = Math.floor(Math.random() * this.rows);
     const centerCol = Math.floor(Math.random() * this.cols);
     const baseIntensity = 0.5 + Math.random() * 0.5;
-    const radius = Math.floor(Math.random() * 3) + 1;
+    const radius = this.isMobile ? 
+      Math.floor(Math.random() * 2) + 1 : // Smaller radius on mobile
+      Math.floor(Math.random() * 3) + 1;
 
     for (let dr = -radius; dr <= radius; dr++) {
       for (let dc = -radius; dc <= radius; dc++) {
@@ -189,7 +216,7 @@ class RandomGridGlow {
           const cellIndex = row * this.cols + col;
           const cell = this.cells[cellIndex];
 
-          if (cell) {
+          if (cell && !this.isDestroyed) {
             const distance = Math.sqrt(dr * dr + dc * dc);
             const cellIntensity = Math.max(0, baseIntensity - distance * 0.2);
 
@@ -200,8 +227,6 @@ class RandomGridGlow {
 
               if (cellIntensity > 0.7 && Math.random() > 0.4) {
                 cell.element.classList.add("intense");
-              } else {
-                cell.element.classList.remove("intense");
               }
             }
           }
@@ -210,28 +235,89 @@ class RandomGridGlow {
     }
   }
 
-  addShape(name, pattern) {
-    this.shapes[name] = pattern;
+  resize() {
+    if (this.isDestroyed) return;
+    
+    // Debounce resize
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    
+    this.resizeTimeout = setTimeout(() => {
+      const multiplier = this.isMobile ? 0.8 : 1.2;
+      this.cols = Math.ceil((window.innerWidth * multiplier) / this.gridSize);
+      this.rows = Math.ceil((window.innerHeight * multiplier) / this.gridSize);
+      
+      // Limit maximum cells
+      const maxCells = this.isMobile ? 200 : 500;
+      const totalCells = this.cols * this.rows;
+      if (totalCells > maxCells) {
+        const ratio = Math.sqrt(maxCells / totalCells);
+        this.cols = Math.floor(this.cols * ratio);
+        this.rows = Math.floor(this.rows * ratio);
+      }
+      
+      this.createGrid();
+    }, 250);
   }
 
-  resize() {
-    this.cols = Math.ceil((window.innerWidth * 1.5) / this.gridSize);
-    this.rows = Math.ceil((window.innerHeight * 1.5) / this.gridSize);
-    this.createGrid();
+  destroy() {
+    this.isDestroyed = true;
+    
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+    
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    
+    // Clear all active timeouts
+    this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.activeTimeouts.clear();
+    
+    // Clear cells array
+    this.cells = [];
+    
+    // Clear DOM
+    if (this.gridContainer) {
+      this.gridContainer.innerHTML = "";
+    }
   }
 }
 
-// Initialize the grid glow
-const gridGlow = new RandomGridGlow();
+// Initialize with error handling
+let gridGlow;
+try {
+  gridGlow = new RandomGridGlow();
+} catch (error) {
+  console.error('Grid glow initialization failed:', error);
+}
 
-// Add custom shape
-gridGlow.addShape('arrow', [
-  [0, -2],
-  [-1, -1], [0, -1], [1, -1],
-  [0, 0], [0, 1], [0, 2]
-]);
-
-// Handle window resize
+// Handle window resize with debouncing
+let resizeTimeout;
 window.addEventListener("resize", () => {
-  gridGlow.resize();
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout);
+  }
+  resizeTimeout = setTimeout(() => {
+    if (gridGlow && !gridGlow.isDestroyed) {
+      gridGlow.resize();
+    }
+  }, 250);
+});
+
+// Handle visibility changes to pause/resume animations
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (gridGlow && gridGlow.animationId) {
+      cancelAnimationFrame(gridGlow.animationId);
+      gridGlow.animationId = null;
+    }
+  } else {
+    if (gridGlow && !gridGlow.isDestroyed && !gridGlow.animationId) {
+      gridGlow.startVisualization();
+    }
+  }
 });
