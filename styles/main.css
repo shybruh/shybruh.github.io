@@ -1,108 +1,183 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Loading animations */
+body {
+  background-color: #0a0a0a;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeInBody 1.5s ease-out forwards;
+}
+
+@keyframes fadeInBody {
+  to {
+    opacity: 1;
   }
-  
-  body {
-    background-color: #0a0a0a;
-    color: white;
-    font-family: 'Orbitron', sans-serif;
-    overflow: hidden;
+}
+
+.grid-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(0px, 0px);
+  transition: transform 0.1s ease-out;
+  opacity: 0;
+  animation: fadeInGrid 4s ease-out 3s forwards;
+}
+
+@keyframes fadeInGrid {
+  to {
+    opacity: 1;
   }
-  
-  .grid-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    pointer-events: none;
-    transform: translate(0px, 0px);
-    transition: transform 0.1s ease-out;
+}
+
+.grid {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  left: -25%;
+  top: -25%;
+  background-image: linear-gradient(#191919 1px, transparent 1px),
+                    linear-gradient(90deg, #191919 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: moveGrid 20s linear infinite;
+}
+/* Grid cells */
+.grid-cell {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;
+  transition: all 0.1s ease-out;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeInCell 1s ease-out forwards;
+}
+
+@keyframes fadeInCell {
+  to {
+    opacity: 1;
   }
-  
-  .grid {
-    position: absolute;
-    width: 300%;
-    height: 300%;
-    left: -50%;
-    top: -50%;
-    background-image: linear-gradient(#191919 1px, transparent 1px),
-                      linear-gradient(90deg, #191919 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: moveGrid 20s linear infinite;
+}
+
+/* Stagger the grid cell animations - much slower */
+.grid-cell:nth-child(even) {
+  animation-delay: 4s;
+}
+
+.grid-cell:nth-child(3n) {
+  animation-delay: 4.5s;
+}
+
+.grid-cell:nth-child(5n) {
+  animation-delay: 5s;
+}
+
+.grid-cell.reactive {
+  border-color: #ff66cc;
+  box-shadow: 
+    0 0 10px rgba(255, 102, 204, 0.6),
+    0 0 20px rgba(255, 102, 204, 0.4),
+    inset 0 0 10px rgba(255, 102, 204, 0.2);
+  background: rgba(255, 102, 204, 0.1);
+}
+
+.grid-cell.reactive.intense {
+  border-color: #ff33aa;
+  box-shadow: 
+    0 0 20px rgba(255, 51, 170, 0.8),
+    0 0 40px rgba(255, 51, 170, 0.6),
+    inset 0 0 20px rgba(255, 51, 170, 0.3);
+  background: rgba(255, 51, 170, 0.2);
+}
+
+@keyframes moveGrid {
+  from {
+    transform: translate(0, 0);
   }
-  /* Grid cells */
-  .grid-cell {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    border: 1px solid transparent;
-    transition: all 0.1s ease-out;
-    pointer-events: none;
+  to {
+    transform: translate(-80px, -80px);
   }
-  
-  .grid-cell.reactive {
-    border-color: #ff66cc;
-    box-shadow: 
-      0 0 10px rgba(255, 102, 204, 0.6),
-      0 0 20px rgba(255, 102, 204, 0.4),
-      inset 0 0 10px rgba(255, 102, 204, 0.2);
-    background: rgba(255, 102, 204, 0.1);
+}
+
+.main {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  text-align: center;
+  z-index: 2;
+  font-size: 1em;
+  letter-spacing: 2px;
+  color: #c0c0ff;
+  text-shadow: 0 0 4px #e1e1f4, 0 0 8px #babad6;
+  opacity: 0;
+  animation: glowFade 10s ease-in-out infinite alternate,
+             floatInMain 2s ease-out 0.5s forwards;
+}
+
+@keyframes floatInMain {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%);
   }
-  
-  .grid-cell.reactive.intense {
-    border-color: #ff33aa;
-    box-shadow: 
-      0 0 20px rgba(255, 51, 170, 0.8),
-      0 0 40px rgba(255, 51, 170, 0.6),
-      inset 0 0 20px rgba(255, 51, 170, 0.3);
-    background: rgba(255, 51, 170, 0.2);
-  }
-  
-  @keyframes moveGrid {
-    from {
-      transform: translate(0, 0);
-    }
-    to {
-      transform: translate(-80px, -80px);
-    }
-  }
-  
-  .main {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 2;
-    font-size: 1em;
-    letter-spacing: 2px;
-    color: #c0c0ff;
-    text-shadow: 0 0 4px #e1e1f4, 0 0 8px #babad6;
+  to {
     opacity: 0.85;
-    animation: glowFade 10s ease-in-out infinite alternate;
+    transform: translate(-50%, -50%);
   }
-  
-  .main img {
+}
+
+.main img {
   filter: drop-shadow(0 0 8px #ff66cc) 
           drop-shadow(0 0 16px #ff33aa) 
           drop-shadow(0 0 24px #cc0099);
-  animation: svgGlow 4s ease-in-out infinite alternate;
+  animation: svgGlow 4s ease-in-out infinite alternate,
+             floatInLogo 2s ease-out 0.2s forwards;
   width: 400px;
   height: auto;
-  transition: transform 0.1s ease-out;
-  transform-style: preserve-3d; /* For 3D effects */
-  }
+  transform-style: preserve-3d;
+  opacity: 0;
+}
 
-  .main ul {
-    transition: transform 0.1s ease-out; /* If using multi-layer parallax */
+
+
+@keyframes floatInLogo {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+.main ul {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: floatInLinks 2s ease-out 1.5s forwards;
+  margin-top: 2em;
+  /* Remove the parallax transition */
+}
+
+@keyframes floatInLinks {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .main img:hover {
-  transform: scale(1.05);
+  /* Remove the transform from hover - it conflicts with animations */
   filter: drop-shadow(0 0 15px #ff66cc) 
           drop-shadow(0 0 30px #ff33aa) 
           drop-shadow(0 0 45px #cc0099);
@@ -129,53 +204,67 @@
     transform: scale(1.02);
   }
 }
-  
-  .main h1  {
-    color: #ff66cc;
-    text-shadow:
-      0 0 6px #ff66cc,
-      0 0 12px #ff33aa,
-      0 0 18px #cc0099;
-    animation: headingGlow 4s ease-in-out infinite alternate;
-    font-size: 3em;
+
+.main h1 {
+  color: #ff66cc;
+  text-shadow:
+    0 0 6px #ff66cc,
+    0 0 12px #ff33aa,
+    0 0 18px #cc0099;
+  animation: headingGlow 4s ease-in-out infinite alternate;
+  font-size: 3em;
+}
+
+@keyframes headingGlow {
+  0% {
+    text-shadow: 0 0 6px #ff66cc, 0 0 12px #ff33aa, 0 0 18px #cc0099;
   }
-  
-  @keyframes headingGlow {
-    0% {
-      text-shadow: 0 0 6px #ff66cc, 0 0 12px #ff33aa, 0 0 18px #cc0099;
-    }
-    100% {
-      text-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa, 0 0 30px #cc0099;
-    }
+  100% {
+    text-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa, 0 0 30px #cc0099;
   }
-  
-  .main p {
-    margin-top: 1em;
-    font-size: 1.2em;
+}
+
+.main p {
+  margin-top: 1em;
+  font-size: 1.2em;
+}
+
+@keyframes glowFade {
+  from {
+    text-shadow: 0 0 4px #8888ff, 0 0 8px #5555ff;
+    opacity: 0.85;
   }
-  
-  .main ul {
-    margin-top: 2em;
+  to {
+    text-shadow: 0 0 6px #aaaaff, 0 0 12px #7777ff;
+    opacity: 1;
   }
-  
-  @keyframes glowFade {
-    from {
-      text-shadow: 0 0 4px #8888ff, 0 0 8px #5555ff;
-      opacity: 0.85;
-    }
-    to {
-      text-shadow: 0 0 6px #aaaaff, 0 0 12px #7777ff;
-      opacity: 1;
-    }
+}
+
+/* Individual link animations */
+a.text {
+  color: #aaaaff;
+  text-decoration: none;
+  margin: 0 0.5em;
+  transition: color 0.3s;
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: floatInLink 1s ease-out forwards;
+}
+
+a.text:nth-child(1) { animation-delay: 2s; }
+a.text:nth-child(3) { animation-delay: 2.3s; }
+a.text:nth-child(5) { animation-delay: 2.6s; }
+a.text:nth-child(7) { animation-delay: 2.9s; }
+a.text:nth-child(9) { animation-delay: 3.2s; }
+
+@keyframes floatInLink {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  a.text {
-    color: #aaaaff;
-    text-decoration: none;
-    margin: 0 0.5em;
-    transition: color 0.3s;
-  }
-  
-  a.text:hover {
-    color: #ffffff;
-  }
+}
+
+a.text:hover {
+  color: #ffffff;
+}
