@@ -32,7 +32,7 @@
     background-image: linear-gradient(#191919 1px, transparent 1px),
                       linear-gradient(90deg, #191919 1px, transparent 1px);
     background-size: 40px 40px;
-    animation: moveGrid 10s linear infinite;
+    animation: moveGrid 20s linear infinite;
   }
   /* Grid cells */
   .grid-cell {
@@ -87,26 +87,48 @@
   }
   
   .main img {
+  filter: drop-shadow(0 0 8px #ff66cc) 
+          drop-shadow(0 0 16px #ff33aa) 
+          drop-shadow(0 0 24px #cc0099);
+  animation: svgGlow 4s ease-in-out infinite alternate;
+  width: 400px;
+  height: auto;
+  transition: transform 0.1s ease-out;
+  transform-style: preserve-3d; /* For 3D effects */
+  }
+
+  .main ul {
+    transition: transform 0.1s ease-out; /* If using multi-layer parallax */
+  }
+
+.main img:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 15px #ff66cc) 
+          drop-shadow(0 0 30px #ff33aa) 
+          drop-shadow(0 0 45px #cc0099);
+}
+
+@keyframes svgGlow {
+  0% {
     filter: drop-shadow(0 0 8px #ff66cc) 
             drop-shadow(0 0 16px #ff33aa) 
             drop-shadow(0 0 24px #cc0099);
-    animation: svgGlow 4s ease-in-out infinite alternate;
-    width: 400px;
-    height: auto;
   }
-  
-  @keyframes svgGlow {
-    0% {
-      filter: drop-shadow(0 0 8px #ff66cc) 
-              drop-shadow(0 0 16px #ff33aa) 
-              drop-shadow(0 0 24px #cc0099);
-    }
-    100% {
-      filter: drop-shadow(0 0 12px #ff66cc) 
-              drop-shadow(0 0 24px #ff33aa) 
-              drop-shadow(0 0 36px #cc0099);
-    }
+  100% {
+    filter: drop-shadow(0 0 12px #ff66cc) 
+            drop-shadow(0 0 24px #ff33aa) 
+            drop-shadow(0 0 36px #cc0099);
   }
+}
+
+@keyframes svgPulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
   
   .main h1  {
     color: #ff66cc;
