@@ -1,31 +1,26 @@
-// Ultra-optimized grid glow with aggressive memory management
+// Memory-optimized grid glow system
 class RandomGridGlow {
   constructor() {
     this.gridContainer = document.getElementById("dynamic-grid");
-    this.cells = new Map(); // Use Map for better memory management
+    this.cells = [];
     this.animationId = null;
     this.lastGlowTime = 0;
-    this.glowInterval = 1000;
+    this.glowInterval = 800;
     this.isDestroyed = false;
-    this.activeTimeouts = new Set();
-    this.activeCells = new Set(); // Track only active cells
-    this.memoryCleanupInterval = null;
+    this.activeTimeouts = new Set(); // Track timeouts for cleanup
 
-    // Detect mobile and reduce complexity significantly
+    // Detect mobile and reduce complexity
     this.isMobile = window.innerWidth <= 768 || 
                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    this.gridSize = this.isMobile ? 80 : 60; // Larger cells = fewer cells
+    this.gridSize = this.isMobile ? 60 : 40;
+    // Significantly reduce grid size for performance
+    const multiplier = this.isMobile ? 0.8 : 1.2;
+    this.cols = Math.ceil((window.innerWidth * multiplier) / this.gridSize);
+    this.rows = Math.ceil((window.innerHeight * multiplier) / this.gridSize);
     
-    // Drastically reduce grid size
-    const maxWidth = Math.min(window.innerWidth, 1200);
-    const maxHeight = Math.min(window.innerHeight, 800);
-    
-    this.cols = Math.ceil(maxWidth / this.gridSize);
-    this.rows = Math.ceil(maxHeight / this.gridSize);
-    
-    // Hard limit on total cells
-    const maxCells = this.isMobile ? 50 : 150;
+    // Limit maximum cells for performance
+    const maxCells = this.isMobile ? 200 : 500;
     const totalCells = this.cols * this.rows;
     if (totalCells > maxCells) {
       const ratio = Math.sqrt(maxCells / totalCells);
@@ -33,72 +28,80 @@ class RandomGridGlow {
       this.rows = Math.floor(this.rows * ratio);
     }
 
-    // Minimal shapes only
-    this.shapes = {
-      dot: [[0, 0]],
-      line: [[-1, 0], [0, 0], [1, 0]],
-      small: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]]
+    // Simplified shapes for mobile
+    this.shapes = this.isMobile ? {
+      circle: [
+        [-1, -1], [0, -1], [1, -1],
+        [-1, 0], [0, 0], [1, 0],
+        [-1, 1], [0, 1], [1, 1]
+      ],
+      cross: [
+        [0, -1],
+        [-1, 0], [0, 0], [1, 0],
+        [0, 1]
+      ]
+    } : {
+      heart: [
+        [-2, -1], [-1, -2], [0, -2], [1, -2], [2, -1],
+        [-2, 0], [-1, -1], [0, -1], [1, -1], [2, 0],
+        [-1, 0], [0, 0], [1, 0],
+        [-1, 1], [0, 1], [1, 1],
+        [0, 2]
+      ],
+      star: [
+        [0, -3],
+        [-1, -1], [0, -1], [1, -1],
+        [-3, 0], [-1, 0], [0, 0], [1, 0], [3, 0],
+        [-1, 1], [0, 1], [1, 1],
+        [0, 3]
+      ],
+      diamond: [
+        [0, -2],
+        [-1, -1], [0, -1], [1, -1],
+        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0],
+        [-1, 1], [0, 1], [1, 1],
+        [0, 2]
+      ]
     };
 
     this.createGrid();
     this.startVisualization();
-    this.startMemoryCleanup();
     
-    // Aggressive cleanup listeners
+    // Add cleanup on page unload
     window.addEventListener('beforeunload', () => this.destroy());
     window.addEventListener('pagehide', () => this.destroy());
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.pauseAnimations();
-      } else {
-        this.resumeAnimations();
-      }
-    });
   }
 
   createGrid() {
     if (this.isDestroyed) return;
     
-    // Clear everything first
-    this.clearAllTimeouts();
-    this.cells.clear();
-    this.activeCells.clear();
+    // Clear existing timeouts
+    this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.activeTimeouts.clear();
     
-    // Use minimal DOM manipulation
+    const fragment = document.createDocumentFragment();
     this.gridContainer.innerHTML = "";
-    
-    // Create cells on-demand instead of pre-creating all
-    this.gridContainer.style.width = `${this.cols * this.gridSize}px`;
-    this.gridContainer.style.height = `${this.rows * this.gridSize}px`;
-  }
+    this.cells = [];
 
-  // Create cells only when needed
-  getOrCreateCell(row, col) {
-    const key = `${row}-${col}`;
-    
-    if (!this.cells.has(key)) {
-      const cell = document.createElement("div");
-      cell.className = "grid-cell";
-      cell.style.left = `${col * this.gridSize}px`;
-      cell.style.top = `${row * this.gridSize}px`;
-      cell.style.position = "absolute";
-      
-      this.gridContainer.appendChild(cell);
-      
-      const cellData = {
-        element: cell,
-        x: col,
-        y: row,
-        intensity: 0,
-        lastUpdate: 0,
-        key: key
-      };
-      
-      this.cells.set(key, cellData);
-      return cellData;
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        const cell = document.createElement("div");
+        cell.className = "grid-cell";
+        cell.style.left = `${(col * this.gridSize) - this.gridSize}px`;
+        cell.style.top = `${(row * this.gridSize) - this.gridSize}px`;
+
+        fragment.appendChild(cell);
+        this.cells.push({
+          element: cell,
+          x: col,
+          y: row,
+          intensity: 0,
+          lastUpdate: 0,
+        });
+      }
     }
-    
-    return this.cells.get(key);
+
+    this.gridContainer.appendChild(fragment);
   }
 
   startVisualization() {
@@ -108,17 +111,10 @@ class RandomGridGlow {
       cancelAnimationFrame(this.animationId);
     }
 
-    let frameCount = 0;
     const animate = () => {
       if (this.isDestroyed) return;
       
-      frameCount++;
-      
-      // Only update every 3rd frame for performance
-      if (frameCount % 3 === 0) {
-        this.updateVisualization();
-      }
-      
+      this.updateVisualization();
       this.animationId = requestAnimationFrame(animate);
     };
 
@@ -133,77 +129,35 @@ class RandomGridGlow {
     if (currentTime - this.lastGlowTime > this.glowInterval) {
       this.createRandomGlowingAreas();
       this.lastGlowTime = currentTime;
-      this.glowInterval = this.isMobile ? 2000 + Math.random() * 1000 : 1200 + Math.random() * 800;
+      this.glowInterval = this.isMobile ? 1000 + Math.random() * 500 : 600 + Math.random() * 400;
     }
 
-    // Clean up inactive cells less frequently
-    if (currentTime % 1000 < 50) {
-      this.cleanupInactiveCells(currentTime);
+    // Batch DOM updates and limit frequency
+    if (currentTime % 300 < 50) { // Only update every ~300ms
+      this.cells.forEach((cell) => {
+        if (currentTime - cell.lastUpdate > 500) {
+          cell.element.classList.remove("reactive", "intense");
+          cell.intensity = 0;
+        }
+      });
     }
-  }
-
-  cleanupInactiveCells(currentTime) {
-    const cellsToRemove = [];
-    
-    this.activeCells.forEach(key => {
-      const cell = this.cells.get(key);
-      if (cell && currentTime - cell.lastUpdate > 2000) {
-        cell.element.classList.remove("reactive", "intense");
-        cell.intensity = 0;
-        cellsToRemove.push(key);
-      }
-    });
-    
-    // Remove from active set
-    cellsToRemove.forEach(key => {
-      this.activeCells.delete(key);
-    });
   }
 
   createRandomGlowingAreas() {
     if (this.isDestroyed) return;
     
     const currentTime = Date.now();
-    const numGlowingAreas = this.isMobile ? 1 : Math.floor(Math.random() * 2) + 1;
+    const numGlowingAreas = this.isMobile ? 
+      Math.floor(Math.random() * 2) + 1 : // 1-2 areas on mobile
+      Math.floor(Math.random() * 3) + 2;  // 2-4 areas on desktop
 
     for (let i = 0; i < numGlowingAreas; i++) {
-      if (Math.random() < 0.7) {
-        this.createSimpleGlow(currentTime);
-      } else {
+      const useShape = Math.random() < 0.4;
+      
+      if (useShape) {
         this.createShapeGlow(currentTime);
-      }
-    }
-  }
-
-  createSimpleGlow(currentTime) {
-    if (this.isDestroyed) return;
-    
-    const centerRow = Math.floor(Math.random() * this.rows);
-    const centerCol = Math.floor(Math.random() * this.cols);
-    const radius = this.isMobile ? 1 : 2;
-
-    for (let dr = -radius; dr <= radius; dr++) {
-      for (let dc = -radius; dc <= radius; dc++) {
-        const row = centerRow + dr;
-        const col = centerCol + dc;
-
-        if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
-          const cell = this.getOrCreateCell(row, col);
-          
-          if (cell && !this.isDestroyed) {
-            const distance = Math.sqrt(dr * dr + dc * dc);
-            if (distance <= radius) {
-              cell.intensity = Math.max(0.3, 0.8 - distance * 0.3);
-              cell.lastUpdate = currentTime;
-              cell.element.classList.add("reactive");
-              this.activeCells.add(cell.key);
-              
-              if (distance < 1) {
-                cell.element.classList.add("intense");
-              }
-            }
-          }
-        }
+      } else {
+        this.createCircularGlow(currentTime);
       }
     }
   }
@@ -217,99 +171,85 @@ class RandomGridGlow {
 
     const centerRow = Math.floor(Math.random() * this.rows);
     const centerCol = Math.floor(Math.random() * this.cols);
+    const baseIntensity = 0.6 + Math.random() * 0.4;
 
     shapePattern.forEach(([dr, dc]) => {
       const row = centerRow + dr;
       const col = centerCol + dc;
 
       if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
-        const cell = this.getOrCreateCell(row, col);
+        const cellIndex = row * this.cols + col;
+        const cell = this.cells[cellIndex];
 
         if (cell && !this.isDestroyed) {
-          cell.intensity = 0.7;
+          const distance = Math.sqrt(dr * dr + dc * dc);
+          const cellIntensity = Math.max(0.3, baseIntensity - distance * 0.1);
+
+          cell.intensity = cellIntensity;
           cell.lastUpdate = currentTime;
-          cell.element.classList.add("reactive", "intense");
-          this.activeCells.add(cell.key);
+          cell.element.classList.add("reactive");
+
+          if (distance < 1.5 || Math.random() > 0.6) {
+            cell.element.classList.add("intense");
+          }
         }
       }
     });
   }
 
-  startMemoryCleanup() {
-    // Aggressive memory cleanup every 5 seconds
-    this.memoryCleanupInterval = setInterval(() => {
-      if (this.isDestroyed) return;
-      
-      this.performMemoryCleanup();
-    }, 5000);
-  }
-
-  performMemoryCleanup() {
-    const currentTime = Date.now();
-    const cellsToDelete = [];
+  createCircularGlow(currentTime) {
+    if (this.isDestroyed) return;
     
-    // Remove unused cells from DOM and memory
-    this.cells.forEach((cell, key) => {
-      if (currentTime - cell.lastUpdate > 5000 && !this.activeCells.has(key)) {
-        if (cell.element && cell.element.parentNode) {
-          cell.element.parentNode.removeChild(cell.element);
+    const centerRow = Math.floor(Math.random() * this.rows);
+    const centerCol = Math.floor(Math.random() * this.cols);
+    const baseIntensity = 0.5 + Math.random() * 0.5;
+    const radius = this.isMobile ? 
+      Math.floor(Math.random() * 2) + 1 : // Smaller radius on mobile
+      Math.floor(Math.random() * 3) + 1;
+
+    for (let dr = -radius; dr <= radius; dr++) {
+      for (let dc = -radius; dc <= radius; dc++) {
+        const row = centerRow + dr;
+        const col = centerCol + dc;
+
+        if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
+          const cellIndex = row * this.cols + col;
+          const cell = this.cells[cellIndex];
+
+          if (cell && !this.isDestroyed) {
+            const distance = Math.sqrt(dr * dr + dc * dc);
+            const cellIntensity = Math.max(0, baseIntensity - distance * 0.2);
+
+            if (cellIntensity > 0.2) {
+              cell.intensity = cellIntensity;
+              cell.lastUpdate = currentTime;
+              cell.element.classList.add("reactive");
+
+              if (cellIntensity > 0.7 && Math.random() > 0.4) {
+                cell.element.classList.add("intense");
+              }
+            }
+          }
         }
-        cellsToDelete.push(key);
       }
-    });
-    
-    // Remove from Map
-    cellsToDelete.forEach(key => {
-      this.cells.delete(key);
-    });
-    
-    // Force garbage collection hint (if available)
-    if (window.gc) {
-      window.gc();
     }
-    
-    console.log(`Memory cleanup: ${cellsToDelete.length} cells removed, ${this.cells.size} cells remaining`);
-  }
-
-  pauseAnimations() {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-      this.animationId = null;
-    }
-  }
-
-  resumeAnimations() {
-    if (!this.animationId && !this.isDestroyed) {
-      this.startVisualization();
-    }
-  }
-
-  clearAllTimeouts() {
-    this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
-    this.activeTimeouts.clear();
   }
 
   resize() {
     if (this.isDestroyed) return;
     
-    // Debounce resize with cleanup
+    // Debounce resize
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
     
     this.resizeTimeout = setTimeout(() => {
-      // Destroy everything and recreate
-      this.pauseAnimations();
-      this.performMemoryCleanup();
+      const multiplier = this.isMobile ? 0.8 : 1.2;
+      this.cols = Math.ceil((window.innerWidth * multiplier) / this.gridSize);
+      this.rows = Math.ceil((window.innerHeight * multiplier) / this.gridSize);
       
-      // Recalculate dimensions
-      const maxWidth = Math.min(window.innerWidth, 1200);
-      const maxHeight = Math.min(window.innerHeight, 800);
-      
-      this.cols = Math.ceil(maxWidth / this.gridSize);
-      this.rows = Math.ceil(maxHeight / this.gridSize);
-      
-      const maxCells = this.isMobile ? 50 : 150;
+      // Limit maximum cells
+      const maxCells = this.isMobile ? 200 : 500;
       const totalCells = this.cols * this.rows;
       if (totalCells > maxCells) {
         const ratio = Math.sqrt(maxCells / totalCells);
@@ -318,86 +258,44 @@ class RandomGridGlow {
       }
       
       this.createGrid();
-      this.resumeAnimations();
-    }, 500);
+    }, 250);
   }
 
   destroy() {
     this.isDestroyed = true;
     
-    this.pauseAnimations();
-    this.clearAllTimeouts();
-    
-    if (this.memoryCleanupInterval) {
-      clearInterval(this.memoryCleanupInterval);
-      this.memoryCleanupInterval = null;
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
     }
     
     if (this.resizeTimeout) {
       clearTimeout(this.resizeTimeout);
     }
     
-    // Clear all cells from DOM
-    this.cells.forEach(cell => {
-      if (cell.element && cell.element.parentNode) {
-        cell.element.parentNode.removeChild(cell.element);
-      }
-    });
+    // Clear all active timeouts
+    this.activeTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.activeTimeouts.clear();
     
-    // Clear all data structures
-    this.cells.clear();
-    this.activeCells.clear();
+    // Clear cells array
+    this.cells = [];
     
     // Clear DOM
     if (this.gridContainer) {
       this.gridContainer.innerHTML = "";
     }
-    
-    // Nullify references
-    this.gridContainer = null;
-    this.cells = null;
-    this.activeCells = null;
-    this.shapes = null;
   }
 }
 
-// Initialize with better error handling and memory monitoring
+// Initialize with error handling
 let gridGlow;
-
-function initializeGridGlow() {
-  try {
-    if (gridGlow) {
-      gridGlow.destroy();
-    }
-    gridGlow = new RandomGridGlow();
-  } catch (error) {
-    console.error('Grid glow initialization failed:', error);
-    // Fallback: disable grid effects
-    const gridContainer = document.getElementById("dynamic-grid");
-    if (gridContainer) {
-      gridContainer.style.display = 'none';
-    }
-  }
+try {
+  gridGlow = new RandomGridGlow();
+} catch (error) {
+  console.error('Grid glow initialization failed:', error);
 }
 
-// Memory monitoring (development only)
-function monitorMemory() {
-  if (performance.memory) {
-    console.log('Memory usage:', {
-      used: Math.round(performance.memory.usedJSHeapSize / 1048576) + ' MB',
-      total: Math.round(performance.memory.totalJSHeapSize / 1048576) + ' MB',
-      limit: Math.round(performance.memory.jsHeapSizeLimit / 1048576) + ' MB'
-    });
-  }
-}
-
-// Initialize
-initializeGridGlow();
-
-// Monitor memory every 10 seconds (remove in production)
-setInterval(monitorMemory, 10000);
-
-// Handle window resize with aggressive cleanup
+// Handle window resize with debouncing
 let resizeTimeout;
 window.addEventListener("resize", () => {
   if (resizeTimeout) {
@@ -407,31 +305,19 @@ window.addEventListener("resize", () => {
     if (gridGlow && !gridGlow.isDestroyed) {
       gridGlow.resize();
     }
-  }, 500);
+  }, 250);
 });
 
-// Page visibility handling
+// Handle visibility changes to pause/resume animations
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    if (gridGlow) {
-      gridGlow.pauseAnimations();
+    if (gridGlow && gridGlow.animationId) {
+      cancelAnimationFrame(gridGlow.animationId);
+      gridGlow.animationId = null;
     }
   } else {
-    if (gridGlow && !gridGlow.isDestroyed) {
-      gridGlow.resumeAnimations();
+    if (gridGlow && !gridGlow.isDestroyed && !gridGlow.animationId) {
+      gridGlow.startVisualization();
     }
   }
 });
-
-// Emergency cleanup on high memory usage
-if (performance.memory) {
-  setInterval(() => {
-    const memoryUsage = performance.memory.usedJSHeapSize / 1048576; // MB
-    if (memoryUsage > 100) { // If over 100MB
-      console.warn('High memory usage detected, performing emergency cleanup');
-      if (gridGlow) {
-        gridGlow.performMemoryCleanup();
-      }
-    }
-  }, 5000);
-}
